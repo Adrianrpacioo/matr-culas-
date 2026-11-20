@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#13263a">
+  <meta name="description" content="Registro local de vehículos y consultas">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>Registro de vehículos</title>
+  <style>
+    :root{--bg:#f3f6f9;--card:#fff;--ink:#152436;--muted:#637486;--blue:#173b5b;--accent:#2676c9;--border:#dce4ec;--danger:#b83232}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+    header{background:linear-gradient(135deg,#13263a,#244e72);color:white;padding:24px 18px 18px;position:sticky;top:0;z-index:3;box-shadow:0 3px 12px #0002}
+    header h1{font-size:21px;margin:0 0 5px} header p{margin:0;color:#d7e5f1;font-size:13px}
+    main{max-width:760px;margin:0 auto;padding:14px}
+    .tabs{display:flex;gap:8px;margin:0 0 14px}
+    .tab{flex:1;border:1px solid var(--border);background:white;color:var(--blue);border-radius:12px;padding:12px;font-weight:700}
+    .tab.active{background:var(--blue);color:white;border-color:var(--blue)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #12283b08}
+    h2{font-size:17px;margin:0 0 13px}
+    label{display:block;font-size:13px;font-weight:650;margin:12px 0 6px;color:#30465a}
+    input,select,textarea{width:100%;font:inherit;font-size:16px;padding:12px;border:1px solid #cbd6e1;border-radius:11px;background:#fff;color:var(--ink);outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px #2676c920}
+    textarea{min-height:80px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btn{border:0;border-radius:12px;padding:13px 15px;font-size:15px;font-weight:750;background:var(--blue);color:white;width:100%;margin-top:12px}
+    .btn.secondary{background:#e8eef4;color:var(--blue)} .btn.danger{background:#fff0f0;color:var(--danger)}
+    .small{font-size:12px;color:var(--muted);line-height:1.45}
+    .hidden{display:none!important}
+    .entry{border:1px solid var(--border);border-radius:14px;padding:13px;margin:10px 0;background:white}
+    .entry-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .plate{font-size:18px;font-weight:850;letter-spacing:1.2px;background:#f1f5f8;border:1px solid #d6e0e8;border-radius:8px;padding:7px 10px;display:inline-block}
+    .date{font-size:12px;color:var(--muted);text-align:right}
+    .details{font-size:14px;margin:10px 0 0;line-height:1.55}
+    .actions{display:flex;gap:8px;margin-top:10px}.actions button{flex:1;margin:0;padding:10px}
+    .empty{text-align:center;color:var(--muted);padding:25px 10px}
+    .filtergrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .notice{background:#fff8e8;border:1px solid #f0dfb6;color:#785600;border-radius:12px;padding:11px;font-size:12px;line-height:1.45;margin-bottom:12px}
+    @media(min-width:600px){main{padding:20px}.row,.filtergrid{gap:14px}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Registro de vehículos</h1>
+  <p>Registro y consulta local · Sin conexión</p>
+</header>
+<main>
+  <div class="tabs">
+    <button class="tab active" data-view="formView">Registrar</button>
+    <button class="tab" data-view="listView">Buscar / Historial</button>
+  </div>
+  <section id="formView">
+    <div class="card">
+      <h2 id="formTitle">Nuevo registro</h2>
+      <form id="vehicleForm">
+        <input type="hidden" id="editId">
+        <label for="plate">Matrícula *</label>
+        <input id="plate" required maxlength="12" placeholder="1234 ABC" autocomplete="off" autocapitalize="characters">
+        <label for="reason">Motivo *</label>
+        <select id="reason" required>
+          <option value="">Selecciona motivo</option>
+          <option>Semáforo en rojo</option><option>Exceso de velocidad</option><option>Conducción temeraria</option>
+          <option>Uso del móvil</option><option>Estacionamiento indebido</option><option>ITV</option>
+          <option>Seguro</option><option>Alcohol / drogas</option><option>Accidente / incidente</option><option>Otro</option>
+        </select>
+        <div class="row">
+          <div><label for="color">Color</label><select id="color">
+            <option value="">Sin especificar</option><option>Blanco</option><option>Negro</option><option>Gris</option><option>Plateado</option><option>Azul</option><option>Rojo</option><option>Verde</option><option>Amarillo</option><option>Naranja</option><option>Marrón</option><option>Beige</option><option>Otro</option>
+          </select></div>
+          <div><label for="brand">Marca *</label><select id="brand" required></select></div>
+        </div>
+        <label for="model">Modelo</label><input id="model" placeholder="Ej. León, Golf, Serie 3…">
+        <label for="customBrand">Añadir marca nueva</label>
+        <div class="row"><input id="customBrand" placeholder="Escribe una marca"><button type="button" id="addBrand" class="btn secondary" style="margin:0">Añadir</button></div>
+        <label for="notes">Observaciones</label><textarea id="notes" placeholder="Detalles opcionales"></textarea>
+        <button class="btn" type="submit" id="saveBtn">Guardar registro</button>
+        <button class="btn secondary hidden" type="button" id="cancelEdit">Cancelar edición</button>
+      </form>
+    </div>
+  </section>
+  <section id="listView" class="hidden">
+    <div class="card">
+      <h2>Buscar registros</h2>
+      <label for="searchPlate">Matrícula</label><input id="searchPlate" placeholder="Completa o parcial">
+      <div class="filtergrid">
+        <div><label for="filterColor">Color</label><select id="filterColor"><option value="">Todos</option><option>Blanco</option><option>Negro</option><option>Gris</option><option>Plateado</option><option>Azul</option><option>Rojo</option><option>Verde</option><option>Amarillo</option><option>Naranja</option><option>Marrón</option><option>Beige</option><option>Otro</option></select></div>
+        <div><label for="filterBrand">Marca</label><select id="filterBrand"><option value="">Todas</option></select></div>
+      </div>
+      <label for="filterReason">Motivo</label><select id="filterReason"><option value="">Todos</option><option>Semáforo en rojo</option><option>Exceso de velocidad</option><option>Conducción temeraria</option><option>Uso del móvil</option><option>Estacionamiento indebido</option><option>ITV</option><option>Seguro</option><option>Alcohol / drogas</option><option>Accidente / incidente</option><option>Otro</option></select>
+      <button class="btn secondary" id="clearFilters" type="button">Limpiar filtros</button>
+    </div>
+    <div class="card">
+      <h2>Historial <span id="count" class="small"></span></h2>
+      <div id="records"></div>
+      <div class="tools">
+        <button class="btn secondary" id="exportJson">Exportar copia JSON</button>
+        <button class="btn secondary" id="exportCsv">Exportar CSV</button>
+        <button class="btn secondary" id="importBtn">Importar JSON</button>
+        <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+      </div>
+      <p class="small">Los datos se almacenan en este navegador/dispositivo. Exporta copias periódicas para evitar pérdidas.</p>
+    </div>
+  </section>
+  <div class="notice">Uso responsable: guarda solo información necesaria y protege el acceso al dispositivo. Esta app no sincroniza datos ni los envía a servidores.</div>
+</main>
+<script>
+const defaultBrands=["Abarth","Alfa Romeo","Audi","BMW","BYD","Citroën","Cupra","Dacia","Fiat","Ford","Honda","Hyundai","Jeep","Kia","Land Rover","Lexus","Mazda","Mercedes-Benz","MG","Mini","Mitsubishi","Nissan","Opel","Peugeot","Porsche","Renault","SEAT","Škoda","Subaru","Tesla","Toyota","Volkswagen","Volvo"];
+const DB_NAME="RegistroVehiculosDB", DB_VERSION=1;
+let db, brands=defaultBrands.slice(), records=[];
+const $=id=>document.getElementById(id);
+function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains("records"))d.createObjectStore("records",{keyPath:"id"});if(!d.objectStoreNames.contains("brands"))d.createObjectStore("brands",{keyPath:"name"});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+function transaction(store,mode="readonly"){return db.transaction(store,mode).objectStore(store)}
+function getAll(store){return new Promise((res,rej)=>{let r=transaction(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+function put(store,obj){return new Promise((res,rej)=>{let r=transaction(store,"readwrite").put(obj);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});}
+function del(store,key){return new Promise((res,rej)=>{let r=transaction(store,"readwrite").delete(key);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});}
+async function init(){db=await openDb();const saved=await getAll("brands");brands=[...new Set([...defaultBrands,...saved.map(x=>x.name)])].sort((a,b)=>a.localeCompare(b,"es"));records=await getAll("records");renderBrands();renderFilters();renderRecords();$('brand').value="";if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});}
+function renderBrands(){const select=$("brand");select.innerHTML='<option value="">Selecciona marca</option>'+brands.map(b=>`<option>${esc(b)}</option>`).join("");}
+function renderFilters(){const f=$("filterBrand");f.innerHTML='<option value="">Todas</option>'+brands.map(b=>`<option>${esc(b)}</option>`).join("");}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function formatDate(iso){try{return new Date(iso).toLocaleString("es-ES",{dateStyle:"medium",timeStyle:"short"});}catch{return iso;}}
+function renderRecords(){const plate=$("searchPlate").value.trim().toUpperCase(),color=$("filterColor").value,brand=$("filterBrand").value,reason=$("filterReason").value;
+const list=records.filter(r=>(!plate||r.plate.includes(plate))&&(!color||r.color===color)&&(!brand||r.brand===brand)&&(!reason||r.reason===reason)).sort((a,b)=>new Date(b.date)-new Date(a.date));
+$("count").textContent=`(${list.length})`;const target=$("records");
+if(!list.length){target.innerHTML='<div class="empty">No hay registros que coincidan.</div>';return;}
+target.innerHTML=list.map(r=>`<article class="entry"><div class="entry-top"><span class="plate">${esc(r.plate)}</span><span class="date">${formatDate(r.date)}</span></div><p class="details"><b>${esc(r.reason)}</b><br>${esc([r.color,r.brand,r.model].filter(Boolean).join(" · ")||"Sin detalles")} ${r.notes?'<br><span>'+esc(r.notes)+'</span>':''}</p><div class="actions"><button class="btn secondary" onclick="editRecord('${r.id}')">Editar</button><button class="btn danger" onclick="deleteRecord('${r.id}')">Eliminar</button></div></article>`).join("");}
+$("vehicleForm").addEventListener("submit",async e=>{e.preventDefault();const id=$("editId").value||crypto.randomUUID();const previous=records.find(x=>x.id===id);const item={id,plate:$("plate").value.trim().toUpperCase().replace(/\s+/g,""),reason:$("reason").value,color:$("color").value,brand:$("brand").value,model:$("model").value.trim(),notes:$("notes").value.trim(),date:previous?.date||new Date().toISOString(),updatedAt:new Date().toISOString()};if(!item.plate||!item.reason||!item.brand){alert("Completa matrícula, motivo y marca.");return;}await put("records",item);records=await getAll("records");resetForm();renderRecords();switchView("listView");});
+$("addBrand").addEventListener("click",async()=>{const name=$("customBrand").value.trim();if(!name)return alert("Escribe una marca.");if(brands.some(b=>b.toLowerCase()===name.toLowerCase())){alert("Esa marca ya está en la lista.");$("brand").value=brands.find(b=>b.toLowerCase()===name.toLowerCase());$("customBrand").value="";return;}await put("brands",{name});brands.push(name);brands.sort((a,b)=>a.localeCompare(b,"es"));renderBrands();renderFilters();$("brand").value=name;$("customBrand").value="";alert("Marca añadida y guardada.");});
+function resetForm(){ $("vehicleForm").reset();$("editId").value="";$("formTitle").textContent="Nuevo registro";$("saveBtn").textContent="Guardar registro";$("cancelEdit").classList.add("hidden");}
+window.editRecord=async id=>{const r=records.find(x=>x.id===id);if(!r)return;switchView("formView");$("editId").value=r.id;$("plate").value=r.plate;$("reason").value=r.reason;$("color").value=r.color||"";$("brand").value=r.brand;$("model").value=r.model||"";$("notes").value=r.notes||"";$("formTitle").textContent="Editar registro";$("saveBtn").textContent="Guardar cambios";$("cancelEdit").classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});};
+window.deleteRecord=async id=>{if(!confirm("¿Eliminar este registro? Esta acción no se puede deshacer."))return;await del("records",id);records=await getAll("records");renderRecords();};
+$("cancelEdit").addEventListener("click",resetForm);
+function switchView(id){$("formView").classList.toggle("hidden",id!=="formView");$("listView").classList.toggle("hidden",id!=="listView");document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===id));}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>switchView(b.dataset.view)));
+["searchPlate","filterColor","filterBrand","filterReason"].forEach(id=>$(id).addEventListener("input",renderRecords));
+$("clearFilters").onclick=()=>{["searchPlate","filterColor","filterBrand","filterReason"].forEach(id=>$(id).value="");renderRecords();};
+function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+$("exportJson").onclick=()=>download("registro-vehiculos-backup.json",JSON.stringify({schema:1,exportedAt:new Date().toISOString(),records,brands},null,2),"application/json");
+$("exportCsv").onclick=()=>{const cols=["matricula","motivo","color","marca","modelo","observaciones","fecha"];const rows=records.map(r=>[r.plate,r.reason,r.color,r.brand,r.model,r.notes,r.date]);const csv=[cols,...rows].map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");download("registro-vehiculos.csv","\ufeff"+csv,"text/csv;charset=utf-8");};
+$("importBtn").onclick=()=> $("importFile").click();
+$("importFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data.records))throw new Error("Formato no reconocido");if(!confirm(`Importar ${data.records.length} registros. Los registros con mismo ID serán sustituidos. ¿Continuar?`))return;for(const r of data.records){if(r.id&&r.plate)await put("records",r);}for(const b of data.brands||[]){const name=typeof b==="string"?b:b.name;if(name)await put("brands",{name});}records=await getAll("records");const saved=await getAll("brands");brands=[...new Set([...defaultBrands,...saved.map(x=>x.name)])].sort((a,b)=>a.localeCompare(b,"es"));renderBrands();renderFilters();renderRecords();alert("Importación completada.");}catch(err){alert("No se pudo importar: "+err.message);}finally{e.target.value="";}};
+init().catch(err=>alert("No se pudo iniciar la base local: "+err.message));
+</script>
+</body>
+</html>
